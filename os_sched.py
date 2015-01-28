@@ -128,7 +128,6 @@ def sjf(ps):
 
 def srtn(ps):
 	backup = copy.deepcopy(ps)
-	time = -1
 	q = [] 
 	removed = []
 	processSwitch = 0
