@@ -9,8 +9,8 @@ i = 0
 for line in fd:
 		i+= 1
 		tempProc = line.split(" ")
-		tempProc[0] = int(tempProc[0])
-		tempProc[1] = int(tempProc[1])
+		tempProc[0] = int(tempProc[0]) # arrival
+		tempProc[1] = int(tempProc[1]) # burst
 		tempProc.append(0)
 		tempProc.append(0)
 		tempProc.append(0)
@@ -126,6 +126,64 @@ def sjf(ps):
 	print "__SJF__"
 	printProcesses(ps, time,processSwitch)
 
+def increase_waiting_SRTN(queue):
+	for i in xrange(1, len(queue)):
+		queue[i][2] += 1
+
+	
+def srtn2(ps):
+	backup = copy.deepcopy(ps)
+	q = [] 
+	removed = []
+	processSwitch = 0
+	time = get_min_starting_time(ps)
+	newEndTime = time + endTime
+	
+	# get the first process in the queue
+	q = getProcessesSRTN(q,ps,time,removed)
+	currentProcess = q[0]
+	count = 0
+	for time in xrange(time, newEndTime + 1):
+		# if the process is finished, remove it
+		prevCurrentProcess = currentProcess
+		
+		if currentProcess[1] == 0:
+			removed.append(currentProcess)
+			q.remove(currentProcess)
+		
+		q = getProcessesSRTN(q, ps, time, removed)
+		
+		""""count +=1
+		print "Time: {}".format(time)
+		print ("Q:")
+		print q
+		print ("Rem:")
+		print removed
+		"""
+		
+		# get the first process in the reordered q
+		if len(q) > 0: 
+			currentProcess = q[0]
+		if prevCurrentProcess is not currentProcess:
+			processSwitch += 1
+			
+		#decrease the remaining running time for the current process
+		currentProcess[1] -= 1
+		#increase all the waiting of the non-current processes
+		increase_waiting_SRTN(q)
+	
+	removed.sort(key = lambda tup: tup[5])
+	backup.sort(key = lambda tup: tup[5])
+
+	for i in xrange(len(removed)):
+		remProc =removed[i]
+		backupProc = backup[i]
+		backupProc[2] = remProc[2]
+	
+	computeTr(backup)
+	print "__SRTN__"
+	printProcesses(backup, endTime, processSwitch )
+	
 def srtn(ps):
 	backup = copy.deepcopy(ps)
 	q = [] 
@@ -157,11 +215,6 @@ def srtn(ps):
 		currentProcess[1] -= 1
 		time += 1
 
-
-		
-		
-		
-		
 	removed.sort(key=lambda tup: tup[5])
 	print "Rem!"
 	for rem in removed : print rem
@@ -247,6 +300,6 @@ fifo(processes)
 processes = copy.deepcopy(backupProcesses)
 sjf(processes)
 processes = copy.deepcopy(backupProcesses)
-#srtn(processes)
+srtn2(processes)
 processes = copy.deepcopy(backupProcesses)
 roundRob(processes)
